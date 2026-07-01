@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SA Tax Chatbot</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      background: #1a1d23;
+      color: #e2e4e8;
+      display: flex;
+      flex-direction: column;
+    }
+    .header {
+      padding: 12px 20px;
+      background: #252830;
+      border-bottom: 1px solid #3a3f4a;
+      font-size: 14px;
+    }
+    .header strong { color: #7eb8da; }
+    .chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .msg {
+      margin-bottom: 16px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .msg.user {
+      background: #2d3340;
+      margin-left: 24px;
+      border-left: 3px solid #7eb8da;
+    }
+    .msg.assistant {
+      background: #252830;
+      margin-right: 24px;
+      border-left: 3px solid #8bae6a;
+    }
+    .msg .role {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #888;
+      margin-bottom: 6px;
+    }
+    .form-wrap {
+      padding: 16px;
+      background: #252830;
+      border-top: 1px solid #3a3f4a;
+    }
+    .form-inner {
+      max-width: 720px;
+      margin: 0 auto;
+      display: flex;
+      gap: 10px;
+    }
+    #input {
+      flex: 1;
+      padding: 12px 14px;
+      border: 1px solid #3a3f4a;
+      border-radius: 8px;
+      background: #1a1d23;
+      color: #e2e4e8;
+      font: inherit;
+      resize: none;
+      min-height: 44px;
+      max-height: 120px;
+    }
+    #input:focus {
+      outline: none;
+      border-color: #7eb8da;
+    }
+    #send {
+      padding: 12px 20px;
+      background: #4a7ba7;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font: inherit;
+      cursor: pointer;
+      align-self: flex-end;
+    }
+    #send:hover { background: #5a8bb7; }
+    #send:disabled { opacity: 0.6; cursor: not-allowed; }
+    .status {
+      font-size: 12px;
+      color: #888;
+      margin-top: 8px;
+    }
+    .status.error { color: #c75a5a; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    SA Income Tax Act Q&A
+    {% if use_finetuned %}
+      <strong> (fine-tuned model)</strong>
+    {% else %}
+      <span> Set TAX_MODEL_ADAPTER for fine-tuned mode.</span>
+    {% endif %}
+  </div>
+
+  <div class="chat" id="chat">
+    <div class="msg assistant">
+      <div class="role">Assistant</div>
+      Ask a question about the South African Income Tax Act No. 58 of 1962. I will answer from the Act and cite sections where relevant.
+    </div>
+  </div>
+
+  <div class="form-wrap">
+    <div class="form-inner">
+      <textarea id="input" rows="1" placeholder="Type your question..." autofocus></textarea>
+      <button type="button" id="send">Send</button>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <script>
+    const chatEl = document.getElementById("chat");
+    const inputEl = document.getElementById("input");
+    const sendBtn = document.getElementById("send");
+    const statusEl = document.getElementById("status");
+
+    let history = [];
+
+    function setStatus(msg, isError) {
+      statusEl.textContent = msg || "";
+      statusEl.className = "status" + (isError ? " error" : "");
+    }
+
+    function appendMsg(role, content) {
+      const div = document.createElement("div");
+      div.className = "msg " + role;
+      div.innerHTML = "<div class=\"role\">" + (role === "user" ? "You" : "Assistant") + "</div>" + escapeHtml(content);
+      chatEl.appendChild(div);
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML.replace(/\n/g, "<br>");
+    }
+
+    async function send() {
+      const message = inputEl.value.trim();
+      if (!message) return;
+
+      inputEl.value = "";
+      sendBtn.disabled = true;
+      appendMsg("user", message);
+      setStatus("Thinking...");
+
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: message, history: history }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          setStatus(data.error || "Request failed", true);
+          appendMsg("assistant", "Error: " + (data.error || res.statusText));
+          return;
+        }
+
+        history = data.history || [];
+        appendMsg("assistant", data.reply || "");
+        setStatus("");
+      } catch (err) {
+        setStatus(err.message || "Network error", true);
+        appendMsg("assistant", "Error: " + err.message);
+      } finally {
+        sendBtn.disabled = false;
+        inputEl.focus();
+      }
+    }
+
+    sendBtn.addEventListener("click", send);
+    inputEl.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        send();
+      }
+    });
+  </script>
+</body>
+</html>

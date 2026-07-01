@@ -1,0 +1,9 @@
+.env
+chroma_db/
+__pycache__/
+*.pyc
+chat_history.json
+tax_training_data.jsonl
+tax_lora_adapter/
+tax_corpus.txt
+tax_causal_lm/

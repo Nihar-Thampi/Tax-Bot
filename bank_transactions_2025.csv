@@ -1,0 +1,30 @@
+date,description_line_1,description_line_2,description_line_3,amount,balance,transaction_type
+2025-01-01,Super Spar,Groceries for the week,TRX123456,-450.25,14970.5,card_purchase
+2025-01-02,AT&T Telecom,Monthly mobile bill payment,BILL987654,-799.99,14170.51,debit_order
+2025-01-03,Client payment,Monthly client payments for January,PAY123,12000.0,26170.51,Client payment for services
+2025-01-04,Capitec Bank,ATM withdrawal,ATM567890,-500.0,25670.51,cash_withdrawal
+2025-01-05,Eskom,Electricity bill payment,ELECTRIC123,-1200.0,24470.51,debit_order
+2025-01-06,Checkers,Weekly groceries,TRX654321,-600.4,23870.11,card_purchase
+2025-01-08,Atom Software Solutions,Monthly software licensing fee for work,ATOMSOF456,-1200.0,22670.11,debit_order
+2025-01-09,FNB,Bank fees for January,BANKFEE001,-65.0,22605.11,bank_fee
+2025-01-10,Woolworths,Clothing purchase,TRX789012,-850.0,21755.11,card_purchase
+2025-01-12,Pick n Pay,Groceries and household items,TRX567890,-750.25,20904.86,card_purchase
+2025-01-15,Standard Bank,Cash deposit,CASHDEP001,2000.0,22904.86,cash_deposit
+2025-01-16,Uber Eats,Takeaway food order,TRX345678,-300.0,22604.86,card_purchase
+2025-01-17,Discovery Health,Hospital Payment for injury during work,MEDICAL001,-2000.0,20604.86,debit_order
+2025-01-18,Amazon.co.za,Online shopping,ORDER123456,-1500.0,19104.86,card_purchase
+2025-01-20,Woolworths,Groceries for weekend,TRX234567,-650.0,18454.86,card_purchase
+2025-01-22,Petrol Bunk,Payment for Petrol for work,PPMB345678,-300.0,18154.86,cash_withdrawal
+2025-01-23,Vodacom,Data bundle purchase,DATA123456,-200.0,17954.86,card_purchase
+2025-01-25,Hollard Insurance,Insurance claim payment,CLAIM123,5000.0,22954.86,eft_credit
+2025-01-26,KFC,Fast food dinner,TRX098765,-250.0,22704.86,card_purchase
+2025-01-27,FNB,Monthly bank service fee,BANKFEE002,-85.0,22619.86,bank_fee
+2025-01-29,Clicks,Pharmacy purchases,TRX543210,-400.0,22219.86,card_purchase
+2025-01-30,SABC,TV license payment,TVLICENSE123,-265.0,21954.86,debit_order
+2025-02-01,Eskom,Electricity bill payment,Ref: 123456789,-850.0,21004.86,eft_debit
+2025-02-02,Shoprite,Groceries purchase,Ref: 987654,-1200.0,19804.86,card_purchase
+2025-02-03,Salary,Monthly salary payment,Ref: Feb-2025,30000.0,49804.86,salary
+2025-02-04,Capitec Bank,Monthly bank fees,Ref: 2025-02,-75.0,49729.86,bank_fee
+2025-02-05,Discovery Health,Medical aid payment,Ref: 234567,-3000.0,46729.86,debit_order
+2025-02-06,Woolworths,Clothing purchase,Ref: 54321,-1800.0,44929.86,card_purchase
+2025-02-07,Telkom,Internet service payment,Ref: 112233,-799.0,44130.86,eft_debit
