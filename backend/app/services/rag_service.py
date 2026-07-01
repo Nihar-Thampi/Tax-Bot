@@ -1,22 +1,13 @@
-import argparse
 import gc
 import re
-import sys
 import textwrap
 from pathlib import Path
 
 import chromadb
 from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 
-from local_llm import generate
-
-EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-COLLECTION_NAME = "sa_income_tax_act"
-CHROMA_DIR = Path(__file__).with_name("chroma_db")
-# Source of truth for deductions: rebuild index after editing this file.
-LAW_TEXT_PATH = Path(__file__).with_name(
-    "za-act-1962-58-publication-document.txt"
-)
+from app.config import CHROMA_DIR, EMBEDDING_MODEL, LAW_TEXT_PATH, RAG_COLLECTION_NAME
+from app.services.llm_service import generate
 
 CHUNK_SIZE = 1500
 CHUNK_OVERLAP = 200
@@ -71,12 +62,12 @@ def build_index(law_text_path: Path | None = None) -> None:
     client = chromadb.PersistentClient(path=str(CHROMA_DIR))
 
     existing = [c.name for c in client.list_collections()]
-    if COLLECTION_NAME in existing:
-        client.delete_collection(COLLECTION_NAME)
+    if RAG_COLLECTION_NAME in existing:
+        client.delete_collection(RAG_COLLECTION_NAME)
         print("Deleted old collection.")
 
     collection = client.get_or_create_collection(
-        name=COLLECTION_NAME,
+        name=RAG_COLLECTION_NAME,
         embedding_function=embed_fn,
         metadata={"hnsw:space": "cosine"},
     )
@@ -105,7 +96,7 @@ def _get_collection():
     embed_fn = SentenceTransformerEmbeddingFunction(model_name=EMBEDDING_MODEL)
     client = chromadb.PersistentClient(path=str(CHROMA_DIR))
     return client.get_collection(
-        name=COLLECTION_NAME,
+        name=RAG_COLLECTION_NAME,
         embedding_function=embed_fn,
     )
 
@@ -153,41 +144,3 @@ def query(question: str, n_results: int = 8) -> str:
         max_tokens=2048,
         temperature=0.2,
     )
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="SA Income Tax Act -- RAG Engine (local Hugging Face)"
-    )
-    parser.add_argument(
-        "--build", action="store_true",
-        help="Build / rebuild the vector index from the law text file.",
-    )
-    parser.add_argument(
-        "--query", "-q", type=str, default=None,
-        help="Ask a question against the indexed law document.",
-    )
-    args = parser.parse_args()
-
-    if args.build:
-        build_index()
-
-    if args.query:
-        print("\nRetrieving and generating answer ...\n")
-        answer = query(args.query)
-        print(answer)
-
-    if not args.build and not args.query:
-        parser.print_help()
-
-
-def _suppress_shutdown_resource_tracker_error(unraisable):
-    """Suppress known Windows/multiprocess shutdown bug (RLock teardown order)."""
-    if unraisable.exc_type is AttributeError and "_recursion_count" in str(unraisable.exc_value):
-        return
-    sys.__unraisablehook__(unraisable)
-
-
-if __name__ == "__main__":
-    sys.unraisablehook = _suppress_shutdown_resource_tracker_error
-    main()

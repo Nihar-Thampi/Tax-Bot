@@ -1,9 +1,17 @@
-.env
-chroma_db/
+# Python
 __pycache__/
 *.pyc
-chat_history.json
-tax_training_data.jsonl
-tax_lora_adapter/
-tax_corpus.txt
-tax_causal_lm/
+
+# Backend secrets & generated data (source files like the Act PDF/txt and the
+# sample bank CSV are checked in; only generated/derived artifacts are ignored)
+backend/.env
+backend/data/chroma_db/
+backend/data/chat_history.json
+backend/data/tax_training_data.jsonl
+backend/data/tax_corpus.txt
+backend/data/tax_causal_lm/
+backend/data/tax_lora_adapter/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/

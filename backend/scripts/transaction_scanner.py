@@ -2,18 +2,21 @@ import argparse
 import csv
 import json
 import re
+import sys
 import textwrap
 from pathlib import Path
 
-from env_config import get_env, require_env
-from tax_law_rag import retrieve
-from local_llm import generate
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from app.config import BANK_TRANSACTIONS_CSV, OPENAI_API_KEY, get_env, require_env
+from app.services.llm_service import generate
+from app.services.rag_service import retrieve
 
 # Optional: use OpenAI for classification (returns valid JSON so some items can be marked deductible).
 def _openai_available() -> bool:
-    return bool(get_env("OPENAI_API_KEY"))
+    return bool(OPENAI_API_KEY)
 
-DEFAULT_CSV = Path(__file__).with_name("bank_transactions_2025.csv")
+DEFAULT_CSV = BANK_TRANSACTIONS_CSV
 BATCH_SIZE = 15
 
 SYSTEM_PROMPT = textwrap.dedent("""\

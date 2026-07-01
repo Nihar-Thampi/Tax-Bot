@@ -1,21 +1,12 @@
 import json
-import os
+import re
 import textwrap
-from pathlib import Path
 
-from env_config import get_env
-from tax_law_rag import retrieve
-from local_llm import generate
+from app.config import CHAT_HISTORY_PATH, use_fine_tuned_model
+from app.services.llm_service import generate
+from app.services.rag_service import retrieve
 
 MAX_HISTORY = 10
-HISTORY_FILE = Path(__file__).resolve().parent / "chat_history.json"
-
-
-def _use_fine_tuned_model() -> bool:
-    """True if a fine-tuned adapter is loaded (model was trained on the Act)."""
-    path = get_env("TAX_MODEL_ADAPTER")
-    return bool(path and os.path.isdir(path))
-
 
 SYSTEM_PROMPT_RAG = textwrap.dedent("""\
     You are a South African tax law assistant. Answer using ONLY the CONTEXT from the Act provided below.
@@ -38,10 +29,10 @@ SYSTEM_PROMPT_FINETUNED = textwrap.dedent("""\
 
 def load_history() -> list[dict]:
     """Load chat history from file if it exists."""
-    if not HISTORY_FILE.exists():
+    if not CHAT_HISTORY_PATH.exists():
         return []
     try:
-        data = json.loads(HISTORY_FILE.read_text(encoding="utf-8"))
+        data = json.loads(CHAT_HISTORY_PATH.read_text(encoding="utf-8"))
         if isinstance(data, list):
             return data[-MAX_HISTORY * 2:]
         return []
@@ -49,10 +40,21 @@ def load_history() -> list[dict]:
         return []
 
 
+def save_history(history: list[dict]) -> None:
+    """Persist chat history to file (keep last MAX_HISTORY*2 messages)."""
+    try:
+        to_save = history[-(MAX_HISTORY * 2):]
+        CHAT_HISTORY_PATH.write_text(
+            json.dumps(to_save, indent=2, ensure_ascii=False),
+            encoding="utf-8",
+        )
+    except OSError:
+        pass
+
+
 def _trim_list_dump(text: str, finetuned: bool = False) -> str:
     """If the model echoed a long list from the Act, truncate and add a note.
     When finetuned=True, require several consecutive list lines before cutting so short answers (e.g. starting with '18. Deduction...') are kept."""
-    import re
     lines = text.strip().split("\n")
     list_line = re.compile(r"^\s*\(\d+\)\s+.+", re.I)
     section_line = re.compile(r"section\s+sixty[- ]?(one|two|three|\d+)", re.I)
@@ -106,25 +108,13 @@ def _trim_list_dump(text: str, finetuned: bool = False) -> str:
     return text
 
 
-def save_history(history: list[dict]) -> None:
-    """Persist chat history to file (keep last MAX_HISTORY*2 messages)."""
-    try:
-        to_save = history[-(MAX_HISTORY * 2):]
-        HISTORY_FILE.write_text(
-            json.dumps(to_save, indent=2, ensure_ascii=False),
-            encoding="utf-8",
-        )
-    except OSError:
-        pass
-
-
 def get_response(
     user_input: str,
     history: list[dict],
     use_finetuned: bool | None = None,
 ) -> tuple[str, list[dict]]:
     """Get one assistant reply and updated history. use_finetuned=None means auto from TAX_MODEL_ADAPTER."""
-    use_ft = use_finetuned if use_finetuned is not None else _use_fine_tuned_model()
+    use_ft = use_finetuned if use_finetuned is not None else use_fine_tuned_model()
     if use_ft:
         system_prompt = SYSTEM_PROMPT_FINETUNED
         user_content = user_input.strip()
@@ -155,83 +145,3 @@ def get_response(
         {"role": "assistant", "content": answer},
     ]
     return answer, new_history
-
-
-def chat_loop() -> None:
-    """Run an interactive chat session with persisted history."""
-    history = load_history()
-    if history:
-        print(f"  (Loaded {len(history)} previous messages from history.)")
-
-    use_ft = _use_fine_tuned_model()
-    print("=" * 60)
-    print("  SA Income Tax Act -- Q&A Chatbot (local Hugging Face LLM)")
-    if use_ft:
-        print("  Mode: fine-tuned model (answers from trained knowledge of the Act)")
-    else:
-        print("  Mode: RAG (answers from retrieved excerpts). Set TAX_MODEL_ADAPTER to use fine-tuned model.")
-    print("  Type your question and press Enter.")
-    print("  Type 'quit' or 'exit' to end the session.")
-    print("=" * 60)
-
-    while True:
-        try:
-            user_input = input("\nYou: ").strip()
-        except (EOFError, KeyboardInterrupt):
-            save_history(history)
-            print("\nGoodbye!")
-            break
-
-        if not user_input:
-            continue
-        if user_input.lower() in ("quit", "exit", "q"):
-            save_history(history)
-            print("Goodbye!")
-            break
-
-        if use_ft:
-            system_prompt = SYSTEM_PROMPT_FINETUNED
-            user_content = user_input
-        else:
-            system_prompt = SYSTEM_PROMPT_RAG
-            context_chunks = retrieve(user_input, n_results=8)
-            context_block = "\n\n---\n\n".join(
-                f"[CONTEXT {i+1}]\n{chunk}" for i, chunk in enumerate(context_chunks)
-            )
-            user_content = (
-                f"CONTEXT FROM THE ACT:\n{context_block}\n\n"
-                f"USER QUESTION: {user_input}\n\n"
-                "Answer the question in 2-4 short paragraphs in your own words. Do not copy or continue any list from the context. End with 'Net result:' and one sentence."
-            )
-
-        messages = [{"role": "system", "content": system_prompt}]
-        messages.extend(history[-MAX_HISTORY * 2:])
-        messages.append({"role": "user", "content": user_content})
-
-        try:
-            answer = generate(
-                messages,
-                max_tokens=1024,
-                temperature=0.3,
-            )
-            if use_ft and len(answer) > 400:
-                answer = _trim_list_dump(answer, finetuned=True)
-            elif not use_ft:
-                answer = _trim_list_dump(answer, finetuned=False)
-            history.append({"role": "user", "content": user_input})
-            history.append({"role": "assistant", "content": answer})
-            save_history(history)
-
-            print(f"\nAssistant: {answer}")
-
-        except Exception as exc:
-            print(f"\nError: {exc}")
-            print("Please try again.")
-
-
-def main() -> None:
-    chat_loop()
-
-
-if __name__ == "__main__":
-    main()

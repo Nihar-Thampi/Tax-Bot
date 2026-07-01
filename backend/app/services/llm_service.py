@@ -3,18 +3,15 @@ import os
 # Avoid "duplicate template name" when loading PEFT adapter (bitsandbytes/torch.compile)
 os.environ.setdefault("TORCHDYNAMO_DISABLE", "1")
 
-from typing import Any
+from app.config import HF_MODEL, LOCAL_LLM_DEVICE, TAX_MODEL_ADAPTER
 
-from env_config import get_env
-
-_DEFAULT_MODEL = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 _model = None
 _tokenizer = None
 
 
 def _get_device():
     import torch
-    device_override = get_env("LOCAL_LLM_DEVICE").lower()
+    device_override = LOCAL_LLM_DEVICE.lower()
     if device_override in ("cuda", "gpu", "cuda:0"):
         if device_override == "gpu":
             device_override = "cuda"
@@ -34,14 +31,13 @@ def _get_model_and_tokenizer():
         if device == "cpu" and not torch.cuda.is_available():
             print("CUDA not available (PyTorch may be CPU-only). For GPU: install PyTorch with CUDA, or set env LOCAL_LLM_DEVICE=cuda to force.")
         dtype = torch.float16 if device == "cuda" else torch.float32
-        model_id = get_env("HF_MODEL", _DEFAULT_MODEL)
-        adapter_path = get_env("TAX_MODEL_ADAPTER")
+        adapter_path = TAX_MODEL_ADAPTER
         if adapter_path and not os.path.isdir(adapter_path):
             adapter_path = ""
-        print(f"Loading Hugging Face model: {model_id} ...")
-        tokenizer = AutoTokenizer.from_pretrained(adapter_path or model_id, trust_remote_code=True)
+        print(f"Loading Hugging Face model: {HF_MODEL} ...")
+        tokenizer = AutoTokenizer.from_pretrained(adapter_path or HF_MODEL, trust_remote_code=True)
         model = AutoModelForCausalLM.from_pretrained(
-            model_id,
+            HF_MODEL,
             trust_remote_code=True,
             torch_dtype=dtype,
             low_cpu_mem_usage=True,
@@ -111,6 +107,9 @@ def generate(
             truncation=True,
             max_length=max_input_tokens,
         )
+        # Newer transformers versions return a BatchEncoding here instead of a bare tensor.
+        if hasattr(inputs, "input_ids"):
+            inputs = inputs.input_ids
         inputs = inputs.to(model.device)
     else:
         prompt = "\n".join(

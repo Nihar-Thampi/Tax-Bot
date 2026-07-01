@@ -3,16 +3,17 @@ Pure document training: extract clean text from Income Tax Act and optional guid
 Output: one corpus file (~500k-2M tokens) for causal LM training (no Q&A).
 """
 import re
+import sys
 from pathlib import Path
 
-PROJECT_DIR = Path(__file__).resolve().parent
-ACT_PATH = PROJECT_DIR / "za-act-1962-58-publication-document.txt"
-CORPUS_PATH = PROJECT_DIR / "tax_corpus.txt"
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from app.config import CORPUS_PATH, DATA_DIR, LAW_TEXT_PATH as ACT_PATH
 
 # Optional: add paths to PDFs when you have them (SARS Budget 2026, Small Business Guide)
 EXTRA_PATHS = [
-    PROJECT_DIR / "sars_budget_2026_tax_guide.pdf",
-    PROJECT_DIR / "tax_guide_small_businesses.pdf",
+    DATA_DIR / "sars_budget_2026_tax_guide.pdf",
+    DATA_DIR / "tax_guide_small_businesses.pdf",
 ]
 
 

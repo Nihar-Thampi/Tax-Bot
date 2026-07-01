@@ -6,10 +6,13 @@ without relying only on RAG retrieval.
 """
 import json
 import re
+import sys
 from pathlib import Path
 
-LAW_TEXT_PATH = Path(__file__).resolve().parent / "za-act-1962-58-publication-document.txt"
-OUT_PATH = Path(__file__).resolve().parent / "tax_training_data.jsonl"
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from app.config import LAW_TEXT_PATH, TRAINING_DATA_PATH as OUT_PATH
+
 CHUNK_SIZE = 1200
 CHUNK_OVERLAP = 150
 

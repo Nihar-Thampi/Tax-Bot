@@ -1,11 +1,11 @@
 """
 OCR a PDF document into a text file using Tesseract + PyMuPDF.
 
-Usage:
-  python ocr_pdf.py input.pdf                   # writes input.txt
-  python ocr_pdf.py input.pdf -o result.txt
-  python ocr_pdf.py input.pdf --dpi 400        # higher DPI for better accuracy
-  python ocr_pdf.py input.pdf --preprocess light  # light = no binarization (often better for faded scans)
+Usage (run from backend/):
+  python scripts/ocr_pdf.py data/input.pdf                   # writes data/input.txt
+  python scripts/ocr_pdf.py data/input.pdf -o result.txt
+  python scripts/ocr_pdf.py data/input.pdf --dpi 400        # higher DPI for better accuracy
+  python scripts/ocr_pdf.py data/input.pdf --preprocess light  # light = no binarization (often better for faded scans)
 """
 
 import argparse

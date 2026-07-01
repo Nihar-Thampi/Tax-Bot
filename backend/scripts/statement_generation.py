@@ -1,14 +1,15 @@
 import csv
 import json
 import re
+import sys
 import time
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from openai import OpenAI
 
-from env_config import get_env, require_env
-
-OPENAI_MODEL = get_env("OPENAI_MODEL", "gpt-4.1-mini")
+from app.config import BANK_TRANSACTIONS_CSV, OPENAI_MODEL, require_env
 
 _openai_client: OpenAI | None = None
 
@@ -19,7 +20,7 @@ def _get_openai_client() -> OpenAI:
         _openai_client = OpenAI(api_key=require_env("OPENAI_API_KEY"))
     return _openai_client
 
-OUTPUT_CSV = Path(__file__).with_name("bank_transactions_2025.csv")
+OUTPUT_CSV = BANK_TRANSACTIONS_CSV
 MAX_RETRIES = 3
 
 MONTHS = [

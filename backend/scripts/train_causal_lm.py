@@ -7,7 +7,10 @@ import os
 
 os.environ.setdefault("TORCHDYNAMO_DISABLE", "1")
 
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import torch
 from transformers import (
@@ -18,11 +21,8 @@ from transformers import (
     TrainingArguments,
 )
 
-from env_config import get_env
+from app.config import CAUSAL_LM_DIR as OUTPUT_DIR, CORPUS_PATH, get_env
 
-PROJECT_DIR = Path(__file__).resolve().parent
-CORPUS_PATH = PROJECT_DIR / "tax_corpus.txt"
-OUTPUT_DIR = PROJECT_DIR / "tax_causal_lm"
 DEFAULT_MODEL = "Qwen/Qwen2.5-7B-Instruct"
 BLOCK_SIZE = 1024
 

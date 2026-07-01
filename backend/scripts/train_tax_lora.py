@@ -1,7 +1,7 @@
 """
 Fine-tune the local LLM (e.g. TinyLlama) on the SA Income Tax Act with LoRA.
-Run: python build_tax_training_data.py  then  python train_tax_lora.py
-Then set TAX_MODEL_ADAPTER to the output folder (e.g. tax_lora_adapter) so the chatbot uses the fine-tuned model.
+Run (from backend/): python scripts/build_tax_training_data.py  then  python scripts/train_tax_lora.py
+Then set TAX_MODEL_ADAPTER to the output folder (e.g. data/tax_lora_adapter) so the chatbot uses the fine-tuned model.
 """
 import os
 
@@ -9,16 +9,17 @@ import os
 os.environ.setdefault("TORCHDYNAMO_DISABLE", "1")
 
 import json
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer
 from peft import LoraConfig, get_peft_model, TaskType
 
-from env_config import get_env
+from app.config import LORA_ADAPTER_DIR as DEFAULT_OUTPUT_DIR, TRAINING_DATA_PATH as DATASET_PATH, get_env
 
-DATASET_PATH = Path(__file__).resolve().parent / "tax_training_data.jsonl"
-DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent / "tax_lora_adapter"
 DEFAULT_MODEL = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 MAX_LENGTH = 768
 

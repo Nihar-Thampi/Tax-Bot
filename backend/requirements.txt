@@ -10,3 +10,5 @@ accelerate>=0.25.0
 peft>=0.10.0
 datasets>=2.16.0
 flask>=3.0.0
+flask-cors>=4.0.0
+openai>=1.0.0
