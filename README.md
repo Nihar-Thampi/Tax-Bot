@@ -1,6 +1,6 @@
 # SA Tax Chatbot
 
-A chatbot that answers questions about the South African Income Tax Act No. 58 of 1962,
+A chatbot that answers questions about the South African Income Tax,
 plus offline tooling to fine-tune a local LLM on the Act and to scan bank statements for
 likely tax deductions.
 
