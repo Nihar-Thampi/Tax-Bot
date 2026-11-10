@@ -1,0 +1,79 @@
+.shell {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+}
+
+.statute {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(2rem, 5vw, 4rem);
+  color: #e6f1ec;
+  background-color: var(--mantine-color-ledger-8);
+}
+
+.statuteBrand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 650;
+}
+
+.quote {
+  max-width: 30rem;
+  margin: 0;
+}
+
+.quoteSection {
+  font-family: var(--app-font-statute);
+  font-size: 1rem;
+  color: #a6d1c0;
+  padding-bottom: 0.9rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid rgb(166 209 192 / 0.3);
+}
+
+.quoteText {
+  font-family: var(--app-font-statute);
+  font-size: clamp(1.5rem, 2.5vw, 2.05rem);
+  line-height: 1.32;
+  text-wrap: pretty;
+  margin: 0;
+}
+
+.statuteNote {
+  max-width: 28rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: #a6d1c0;
+}
+
+.formSide {
+  display: grid;
+  place-items: center;
+  padding: 2rem 1.25rem;
+}
+
+.form {
+  width: 100%;
+  max-width: 360px;
+}
+
+.mobileBrand.mobileBrand {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .statute {
+    display: none;
+  }
+
+  .mobileBrand.mobileBrand {
+    display: flex;
+  }
+}

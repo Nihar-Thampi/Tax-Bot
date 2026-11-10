@@ -13,6 +13,20 @@ Answers come from one of two modes:
 This is informational only, not professional tax advice — always consult a registered
 tax practitioner.
 
+## Screenshots
+
+![Answer with a citation from the Act](docs/screenshots/01-chat-with-citation.png)
+
+| | |
+|---|---|
+| <img src="docs/screenshots/02-ask-the-act.png" alt="New chat"><br><sub>New chat</sub> | <img src="docs/screenshots/03-chat-dark.png" alt="Dark mode"><br><sub>Dark mode</sub> |
+| <img src="docs/screenshots/04-search-chats.png" alt="Searching saved chats"><br><sub>Searching saved chats</sub> | <img src="docs/screenshots/05-login.png" alt="Sign in"><br><sub>Sign in</sub> |
+
+<img src="docs/screenshots/06-mobile-chat.png" alt="Phone" width="300">
+
+Screenshots use demo or dummy data.
+
+
 ## Project structure
 
 ```
@@ -26,6 +40,24 @@ backend/            Flask API
   run.py              entry point
 frontend/            React + Vite + TypeScript SPA (Mantine UI, Zustand, Axios)
 ```
+
+## Running with Docker (Windows and macOS)
+
+Docker keeps everything that differs between Windows and macOS (`node_modules`, Python packages, native binaries, downloaded models) inside images and Docker volumes. OneDrive then syncs only source code and data, so an update made on one machine runs on the other after one command. Needs Docker Desktop.
+
+```bash
+docker compose up -d --build      # http://localhost:8081
+```
+
+- **Model speed:** Docker on macOS can't use the Apple GPU, so the local model runs on the CPU. That is slow, and a 7B model needs about 16 GB of memory assigned to Docker (Docker Desktop: Settings, Resources). On a Mac, for speed, run the backend natively and only the frontend in Docker: `API_URL=http://host.docker.internal:5000 docker compose -f docker-compose.dev.yml up --build --no-deps frontend`.
+- **NVIDIA GPU (Windows):** `docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d --build` uses CUDA PyTorch with 4-bit loading.
+- **Data:** `backend/data` (the Act, the vector index, adapters, users and saved chats) is mounted from this folder, so OneDrive keeps syncing it. Downloaded Hugging Face models go in the `hf-cache` Docker volume, which is not synced.
+- **Settings:** read from `backend/.env`. Docker's own device settings win over it.
+- **Offline scripts:** `docker compose run --rm backend python scripts/<script>.py`.
+- **Port:** `TAXBOT_PORT=9000 docker compose up -d`.
+- **After pulling or syncing an update:** run `docker compose up -d --build` again; only the changed layers rebuild.
+- **Logs:** `docker compose logs -f backend`. **Stop:** `docker compose down`.
+- **Live reload while editing:** `docker compose -f docker-compose.dev.yml up --build`, then open http://localhost:5181. Code changes on either machine reload the running app. The frontend's `node_modules` lives in a Docker volume and is reinstalled only when `package-lock.json` changes.
 
 ## Backend setup
 

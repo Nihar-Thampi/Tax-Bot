@@ -1,0 +1,51 @@
+# SA Tax Chatbot, built and served the same way on Windows and macOS.
+#   Start:            docker compose up -d --build        then open http://localhost:8081
+#   After an update:  docker compose up -d --build        (rebuilds only what changed)
+#   Logs:             docker compose logs -f backend
+#   Stop:             docker compose down
+# Live reload while editing: docker-compose.dev.yml (see the top of that file).
+# Dependencies live in the images; nothing installed here is synced by OneDrive.
+# Offline scripts run in the same image, e.g.:
+#                   docker compose run --rm backend python scripts/<script>.py
+# NVIDIA GPU (Windows): docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d --build
+
+name: sa-tax-bot
+
+services:
+  backend:
+    build: ./backend
+    env_file:
+      - path: ./backend/.env
+        required: false
+    environment:
+      # Docker's settings win over backend/.env, which is written for running natively.
+      DOTENV_OVERRIDE: "0"
+      # No GPU in Docker on macOS: run the local model on the CPU, without 4-bit loading
+      # (that needs CUDA). docker-compose.gpu.yml switches both back on.
+      LOCAL_LLM_DEVICE: ${LOCAL_LLM_DEVICE:-cpu}
+      LOCAL_LLM_4BIT: ${LOCAL_LLM_4BIT:-0}
+    volumes:
+      # The Act, vector index, trained adapters, users and saved chats stay in backend/data,
+      # so OneDrive keeps syncing them between machines.
+      - ./backend/data:/app/data
+      # Downloaded Hugging Face models are cached here (many GB; not synced).
+      - hf-cache:/root/.cache/huggingface
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/api/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "${TAXBOT_PORT:-8081}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  hf-cache:

@@ -1,0 +1,71 @@
+.item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  border-radius: var(--mantine-radius-md);
+  transition: background-color 120ms ease;
+  overflow: hidden;
+}
+
+.item:hover,
+.item[data-active] {
+  background-color: light-dark(rgb(19 92 69 / 0.07), var(--mantine-color-dark-6));
+}
+
+.item[data-active]::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 2px;
+  background-color: var(--mantine-primary-color-filled);
+}
+
+.item[data-active] .title {
+  font-weight: 600;
+}
+
+.itemButton {
+  flex: 1;
+  min-width: 0;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* padding is set via px/py props; Mantine's button reset overrides it here */
+  border-radius: var(--mantine-radius-md);
+  color: var(--mantine-color-text);
+}
+
+.itemButton:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: -2px;
+}
+
+.title {
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.itemMenu {
+  opacity: 0;
+  transition: opacity 120ms ease;
+  margin-right: 6px;
+}
+
+.item:hover .itemMenu,
+.item[data-active] .itemMenu,
+.itemMenu[data-expanded],
+.itemMenu:focus-visible {
+  opacity: 1;
+}
+
+/* Touch screens have no hover, so always show the menu button there. */
+@media (hover: none) {
+  .itemMenu {
+    opacity: 1;
+  }
+}

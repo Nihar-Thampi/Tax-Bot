@@ -8,7 +8,9 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv(override=True)
+# .env wins over the shell, except in Docker (DOTENV_OVERRIDE=0), where the compose file's
+# settings for the container must win over a .env written for running natively.
+load_dotenv(override=os.environ.get("DOTENV_OVERRIDE", "1") != "0")
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
@@ -22,6 +24,9 @@ CAUSAL_LM_DIR = DATA_DIR / "tax_causal_lm"
 LORA_ADAPTER_DIR = DATA_DIR / "tax_lora_adapter"
 BANK_TRANSACTIONS_CSV = DATA_DIR / "bank_transactions_2025.csv"
 CHAT_HISTORY_PATH = DATA_DIR / "chat_history.json"
+USERS_DB_PATH = DATA_DIR / "users.db"
+# One JSON file per chat, per user; lives in data/ so OneDrive syncs it across devices.
+CONVERSATIONS_DIR = DATA_DIR / "conversations"
 
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 RAG_COLLECTION_NAME = "sa_income_tax_act"
@@ -49,7 +54,19 @@ OPENAI_MODEL = get_env("OPENAI_MODEL", "gpt-4.1-mini")
 HF_MODEL = get_env("HF_MODEL", DEFAULT_HF_MODEL)
 TAX_MODEL_ADAPTER = get_env("TAX_MODEL_ADAPTER")
 LOCAL_LLM_DEVICE = get_env("LOCAL_LLM_DEVICE")
+# Load the local model in 4-bit (needs bitsandbytes + CUDA); lets a 7B model fit in ~6 GB VRAM.
+LOCAL_LLM_4BIT = get_env("LOCAL_LLM_4BIT", "0").lower() in ("1", "true", "yes")
+# Max prompt + reply tokens for the local model (0 = model's own limit).
+LOCAL_LLM_MAX_CONTEXT = int(get_env("LOCAL_LLM_MAX_CONTEXT", "8192"))
 TAX_TRAIN_DEVICE = get_env("TAX_TRAIN_DEVICE")
+
+# Login. JWT_SECRET signs session tokens; if unset, a random one is used per run
+# (everyone is logged out whenever the backend restarts).
+JWT_SECRET = get_env("JWT_SECRET")
+JWT_EXPIRES_MINUTES = int(get_env("JWT_EXPIRES_MINUTES", "480"))
+# Account created on first start, only while the users table is empty.
+ADMIN_USERNAME = get_env("ADMIN_USERNAME", "Admin")
+ADMIN_PASSWORD = get_env("ADMIN_PASSWORD", "Admin123")
 
 
 def use_fine_tuned_model() -> bool:

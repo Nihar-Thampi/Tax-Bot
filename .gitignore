@@ -7,6 +7,8 @@ __pycache__/
 backend/.env
 backend/data/chroma_db/
 backend/data/chat_history.json
+backend/data/conversations/
+backend/data/users.db
 backend/data/tax_training_data.jsonl
 backend/data/tax_corpus.txt
 backend/data/tax_causal_lm/
@@ -15,3 +17,6 @@ backend/data/tax_lora_adapter/
 # Frontend
 frontend/node_modules/
 frontend/dist/
+
+# macOS
+.DS_Store

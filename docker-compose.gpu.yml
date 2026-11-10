@@ -1,0 +1,21 @@
+# NVIDIA GPU add-on (Windows with an NVIDIA card and Docker Desktop's WSL 2 backend).
+# Not for macOS: Docker there has no GPU access.
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d --build
+# Works the same with docker-compose.dev.yml in place of docker-compose.yml.
+
+services:
+  backend:
+    build:
+      args:
+        TORCH_INDEX: https://download.pytorch.org/whl/cu124
+        EXTRA_PIP: bitsandbytes
+    environment:
+      LOCAL_LLM_DEVICE: cuda
+      LOCAL_LLM_4BIT: "1"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

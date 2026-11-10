@@ -1,0 +1,53 @@
+# SA Tax Chatbot with live reload: edit the code (on either machine) and the running app updates.
+#   Start:  docker compose -f docker-compose.dev.yml up --build     then open http://localhost:5181
+#   Stop:   docker compose -f docker-compose.dev.yml down
+# The source is mounted from this folder; node_modules and Python packages stay in Docker.
+# Use a backend running natively instead (for Apple-GPU speed on a Mac):
+#   API_URL=http://host.docker.internal:5000 docker compose -f docker-compose.dev.yml up --build --no-deps frontend
+
+name: sa-tax-bot
+
+services:
+  backend:
+    build: ./backend
+    command: flask --app run:app run --host 0.0.0.0 --port 5000 --reload --no-debugger
+    env_file:
+      - path: ./backend/.env
+        required: false
+    environment:
+      DOTENV_OVERRIDE: "0"
+      LOCAL_LLM_DEVICE: ${LOCAL_LLM_DEVICE:-cpu}
+      LOCAL_LLM_4BIT: ${LOCAL_LLM_4BIT:-0}
+    volumes:
+      - ./backend:/app
+      - hf-cache:/root/.cache/huggingface
+
+  frontend:
+    # Its own image name, so the dev image never replaces the built one from docker-compose.yml.
+    image: sa-tax-bot-frontend-dev
+    build:
+      context: ./frontend
+      target: dev
+    # node_modules lives in a Docker volume, never in the synced folder. It is reinstalled
+    # only when package-lock.json changes (for example after an update synced from the other machine).
+    command: >-
+      sh -c 'lock=$$(sha1sum package-lock.json | cut -c1-40);
+      if [ "$$(cat node_modules/.lock-sha1 2>/dev/null)" != "$$lock" ]; then
+      npm ci --no-audit --no-fund && echo "$$lock" > node_modules/.lock-sha1; fi;
+      exec npm run dev -- --host 0.0.0.0 --port 5181 --strictPort'
+    environment:
+      API_URL: ${API_URL:-http://backend:5000}
+      VITE_POLL: "1"
+    ports:
+      - "5181:5181"
+    volumes:
+      - ./frontend:/app
+      - frontend-node-modules:/app/node_modules
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - backend
+
+volumes:
+  frontend-node-modules:
+  hf-cache:

@@ -4,3 +4,42 @@ body,
   height: 100%;
   margin: 0;
 }
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a {
+  touch-action: manipulation;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+::selection {
+  background: var(--mantine-color-ledger-2);
+  color: var(--mantine-color-ledger-9);
+}
+
+/* Shared press feedback: buttons step down slightly on click. */
+.mantine-Button-root:active:not(:disabled),
+.mantine-ActionIcon-root:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
