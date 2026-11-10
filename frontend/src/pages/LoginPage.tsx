@@ -41,8 +41,8 @@ export default function LoginPage() {
         <figure className={classes.quote}>
           <div className={classes.quoteSection}>Section 11(a)</div>
           <blockquote className={classes.quoteText}>
-            “expenditure and losses actually incurred in the production of the income, provided such expenditure
-            and losses are not of a capital nature”
+            “expenditure and losses actually incurred in the Republic in the production of the income, provided
+            such expenditure and losses are not of a capital nature”
           </blockquote>
         </figure>
         <p className={classes.statuteNote}>
